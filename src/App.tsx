@@ -152,13 +152,13 @@ export const App = () => {
   const optionText = (count: number) => {
     switch (count) {
       case 1:
-        return ["опцию", "которая", "нужна"];
+        return ["категорию", "которая", "нужна"];
       case 2:
       case 3:
       case 4:
-        return ["опции", "которые", "нужны"];
+        return ["категории", "которые", "нужны"];
       case 5:
-        return ["опций", "которые", "нужны"];
+        return ["категорий", "которые", "нужны"];
     }
   };
 
@@ -202,7 +202,7 @@ export const App = () => {
           title={
             selectedProducts.length > 5
               ? `Удали ${Math.abs(numberOfProductsToDelete - selectedProducts.length)} 
-            ${optionText(Math.abs(numberOfProductsToDelete - selectedProducts.length))?.[0]} 
+            ${optionText(Math.abs(numberOfProductsToDelete - selectedProducts.length))?.[0]}, 
             ${optionText(Math.abs(numberOfProductsToDelete - selectedProducts.length))?.[1]} 
             тебе не ${optionText(Math.abs(5 - selectedProducts.length))?.[2]} в подписке`
               : "Лишние опции удалены"
