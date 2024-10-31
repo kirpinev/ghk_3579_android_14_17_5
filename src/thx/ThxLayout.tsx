@@ -5,12 +5,6 @@ import { thxSt } from "./style.css";
 import { appSt } from "../style.css.ts";
 
 export const ThxLayout = () => {
-  const clickSubmit = () => {
-    // window.gtag("event", "ok_click", {
-    //     variant_name: "ghk_3579_android_14_17_5",
-    // });
-  };
-
   return (
     <>
       <div className={thxSt.container}>
@@ -35,7 +29,7 @@ export const ThxLayout = () => {
         </Typography.Text>
       </div>
 
-      <div className={appSt.bottomBtn} onClick={clickSubmit}>
+      <div className={appSt.bottomBtn}>
         <ButtonMobile
           block
           view="primary"

@@ -20,11 +20,14 @@ import { ThxLayout } from "./thx/ThxLayout";
 import { Gap } from "@alfalab/core-components/gap";
 import { Plate } from "@alfalab/core-components/plate";
 import { StatusBadge } from "@alfalab/core-components/status-badge";
+import { sendDataToGA } from "./utils/events.ts";
 
 interface Product {
   title: string;
   text: string;
   image: string;
+  name: string;
+  value: number;
 }
 
 interface Categories {
@@ -40,16 +43,22 @@ const categories: Array<Categories> = [
         title: "+1 топовая категория кэшбэка",
         text: "5% на самое популярное",
         image: smileArrow,
+        name: "one_cashback",
+        value: 1,
       },
       {
         title: "+1 попытка крутить барабан суперкэшбэка",
         text: "Выше шанс выиграть до 100% в случайной категории",
         image: drums,
+        name: "one_baraban",
+        value: 1,
       },
       {
         title: "Увеличенный лимит кэшбэка",
         text: "7000 ₽ в месяц вместо 5000 ₽ за покупки в категориях",
         image: cashback,
+        name: "limit_cashback",
+        value: 1,
       },
     ],
   },
@@ -60,16 +69,22 @@ const categories: Array<Categories> = [
         title: "Бесплатные уведомления",
         text: "Пуши и смс об операциях по всем дебетовым картам",
         image: free,
+        name: "free_pushes",
+        value: 1,
       },
       {
         title: "Бесплатные переводы",
         text: "По России без ограничений по сумме",
         image: transfer,
+        name: "free_transfer",
+        value: 1,
       },
       {
         title: "Бесплатное снятие наличных",
         text: "В банкоматах любых банков России",
         image: cash,
+        name: "free_cash",
+        value: 1,
       },
     ],
   },
@@ -80,6 +95,8 @@ const categories: Array<Categories> = [
         title: "+1% годовых",
         text: "По накопительному Альфа-Счёту на ежедневный остаток",
         image: percent,
+        name: "alfa_schet",
+        value: 1,
       },
     ],
   },
@@ -90,16 +107,22 @@ const categories: Array<Categories> = [
         title: "Подписка на онлайн-кинотеатр",
         text: "Фильмы и сериалы в отличном качестве",
         image: films,
+        name: "online_kino",
+        value: 1,
       },
       {
         title: "Подписка на музыку",
         text: "Миллионы треков и тысячи подкастов",
         image: music,
+        name: "sub_music",
+        value: 1,
       },
       {
         title: "Интернет и мобильная связь",
         text: "Специальный тариф для молодых и свободных",
         image: mobile,
+        name: "internet",
+        value: 1,
       },
     ],
   },
@@ -113,16 +136,11 @@ const preSelectedProducts: Product[] = [
 ];
 
 export const App = () => {
+  const [loading, setLoading] = useState(false);
   const [thxShow, setThx] = useState(LS.getItem(LSKeys.ShowThx, false));
   const [selectedProducts, setSelectedProducts] =
     useState<Product[]>(preSelectedProducts);
   const numberOfProductsToDelete = 5;
-
-  const clickSubmit = () => {
-    // window.gtag("event", "connect_click", {
-    //   variant_name: "ghk_3579_android_14_17_5",
-    // });
-  };
 
   const findProduct = (product: Product) => {
     return selectedProducts.find((option) => option.title === product.title);
@@ -136,29 +154,48 @@ export const App = () => {
 
     if (filteredProducts.length >= 5) {
       if (find) {
+        product.value = 0;
         setSelectedProducts(filteredProducts);
       } else {
+        product.value = 1;
         setSelectedProducts([...selectedProducts, product]);
       }
     }
   };
 
   const submit = () => {
-    clickSubmit();
-    LS.setItem(LSKeys.ShowThx, true);
-    setThx(true);
+    const products: Record<string, number> = {};
+
+    selectedProducts.forEach((product) => {
+      products[product.name] = product.value;
+    });
+
+    categories.forEach((category) => {
+      category.products.forEach((product) => {
+        if (products[product.name] === undefined) {
+          products[product.name] = product.value;
+        }
+      });
+    });
+
+    setLoading(true);
+    sendDataToGA({ ...products }).then(() => {
+      LS.setItem(LSKeys.ShowThx, true);
+      setThx(true);
+      setLoading(false);
+    });
   };
 
   const optionText = (count: number) => {
     switch (count) {
       case 1:
-        return ["категорию", "которая", "нужна"];
+        return ["опцию"];
       case 2:
       case 3:
       case 4:
-        return ["категории", "которые", "нужны"];
+        return ["опции"];
       case 5:
-        return ["категорий", "которые", "нужны"];
+        return ["опций"];
     }
   };
 
@@ -201,10 +238,8 @@ export const App = () => {
           view={selectedProducts.length > 5 ? "attention" : "positive"}
           title={
             selectedProducts.length > 5
-              ? `Удали ${Math.abs(numberOfProductsToDelete - selectedProducts.length)} 
-            ${optionText(Math.abs(numberOfProductsToDelete - selectedProducts.length))?.[0]}, 
-            ${optionText(Math.abs(numberOfProductsToDelete - selectedProducts.length))?.[1]} 
-            тебе не ${optionText(Math.abs(5 - selectedProducts.length))?.[2]} в подписке`
+              ? `Чтобы подключить подписку, удалите ${Math.abs(numberOfProductsToDelete - selectedProducts.length)} 
+            ${optionText(Math.abs(numberOfProductsToDelete - selectedProducts.length))?.[0]} из предложенных`
               : "Лишние опции удалены"
           }
           leftAddons={
@@ -291,7 +326,7 @@ export const App = () => {
 
       {selectedProducts.length === 5 && (
         <div className={appSt.bottomBtn}>
-          <ButtonMobile block view="primary" onClick={submit}>
+          <ButtonMobile loading={loading} block view="primary" onClick={submit}>
             Подключить
           </ButtonMobile>
         </div>
